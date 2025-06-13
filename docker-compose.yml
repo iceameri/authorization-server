@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server
+    container_name: MsSqlServer
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Seoul
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=P@$$$$w0rd1! # P@$$w0rd1! 실제 비밀번호
+    ports:
+      - "1433:1433"
+    volumes:
+      - ./db/mssql:/var/opt/mssql/data

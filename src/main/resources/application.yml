@@ -1,0 +1,40 @@
+app:
+  locale:
+    language: "ko"
+    country: "KR"
+
+server:
+  port: 9090
+
+spring:
+  application:
+    name: authorization-server
+  main:
+    allow-bean-definition-overriding: true
+
+  datasource:
+    jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=oauth;trustServerCertificate=true;encrypt=false
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    username: sa
+    password: P@$$w0rd1!
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 10
+      data-source-class-name: oauthDataSource
+
+  secondary-datasource:
+    jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=resource;trustServerCertificate=true;encrypt=false
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    username: sa
+    password: P@$$w0rd1!
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 10
+      data-source-class-name: resourceDataSource
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.security.oauth2.server.authorization: DEBUG
+    org.springframework.jdbc.core: DEBUG
