@@ -19,7 +19,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final static String PERMIT_ENDPOINT_URL = "/login, /error";
+    private final static String PERMIT_ENDPOINT_URL = "/login, /authorized, /error";
 
     /*
      * 일반사용자

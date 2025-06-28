@@ -97,7 +97,7 @@ VALUES ('1',
         'test',
         'client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt',
         'authorization_code,refresh_token,client_credentials,urn:ietf:params:oauth:grant-type:device_code',
-        'http://localhost:9090/auth/callback',
+        'http://localhost:9090/auth/callback,http://localhost:9091/authorized,http://localhost:9090/auth/authorized',
         'openid,profile,email',
         '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false}',
         '{"@class": "java.util.Collections$UnmodifiableMap","settings.token.authorization-code-time-to-live": ["java.time.Duration", 300.000000000],"settings.token.access-token-time-to-live": ["java.time.Duration", 1800.000000000],"settings.token.refresh-token-time-to-live": ["java.time.Duration", 86400.000000000],"settings.token.reuse-refresh-tokens": ["java.lang.Boolean", false],"settings.token.device-code-time-to-live": ["java.time.Duration", 300.000000000]}');
@@ -121,3 +121,34 @@ CREATE TABLE users
     CONSTRAINT [PK_users] PRIMARY KEY CLUSTERED (user_id ASC),
     CONSTRAINT [UK_users_01] UNIQUE NONCLUSTERED (email ASC, phone ASC)
 );
+
+INSERT INTO users ( user_id
+                  , password
+                  , enabled
+                  , account_non_expired
+                  , credentials_non_expired
+                  , account_non_locked
+                  , created_at
+                  , updated_at
+                  , email
+                  , phone)
+VALUES ('admin',
+        '{noop}1234qwer!!',
+        1,
+        1,
+        1,
+        1,
+        '2025-05-27 16:34:13.2033333',
+        NULL,
+        'admin@admin.co.kr',
+        '01011112222'),
+       ('qwer',
+        '{noop}1234',
+        1,
+        1,
+        1,
+        1,
+        '2025-05-27 16:39:11.6866667',
+        NULL,
+        'qwer@qwer.co.kr',
+        '01011112222');

@@ -58,7 +58,14 @@ public class AuthorizationServerConfig {
                 // 인증 실패 시 로그인 페이지로 이동
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
-                );
+                )
+                /*.logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .deleteCookies("JSESSIONID")
+                )*/;
 
         return http.build();
     }
