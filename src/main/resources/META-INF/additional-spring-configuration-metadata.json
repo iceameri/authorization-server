@@ -31,5 +31,15 @@
     {
       "name": "spring.secondary-datasource.hikari.data-source-class-name",
       "type": "java.lang.String"
+    },
+    {
+      "name": "test.service.client.id",
+      "type": "java.lang.String",
+      "description": "Description for test.service.client.id."
+    },
+    {
+      "name": "test.service.client.secret",
+      "type": "java.lang.String",
+      "description": "Description for test.service.client.secret."
     }
   ] }

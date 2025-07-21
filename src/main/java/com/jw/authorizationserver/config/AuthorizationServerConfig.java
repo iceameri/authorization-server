@@ -27,7 +27,6 @@ import org.springframework.security.oauth2.server.authorization.settings.Authori
 import org.springframework.security.oauth2.server.authorization.token.*;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -59,7 +58,8 @@ public class AuthorizationServerConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
                 )
-                /*.logout(logout -> logout
+                /*
+                .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                         .invalidateHttpSession(true)
@@ -122,7 +122,8 @@ public class AuthorizationServerConfig {
     /**
      * 라이언트 인증, 권한 부여 처리, 토큰 검사, 동적 클라이언트 등록 등 특정 프로토콜 흐름을 따를 때 다른 구성 요소에서 사용
      */
-    /*@Bean
+    /*
+    @Bean
     public RegisteredClientRepository registeredClientRepository(@Qualifier("oauthJdbcTemplate") JdbcTemplate jdbcTemplate) {
         return new JdbcRegisteredClientRepository(jdbcTemplate);
     }*/
@@ -199,7 +200,8 @@ public class AuthorizationServerConfig {
         objectMapper.addMixIn(CustomUserDetails.class, SynchronizedSetMixin.class);
         objectMapper.addMixIn(Collections.synchronizedSet(new HashSet<>()).getClass(), SynchronizedSetMixin.class);
 
-        /*// 보안상 위험함, 운영에서는 지양
+        /*
+        // 보안상 위험함, 운영에서는 지양
         objectMapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL,

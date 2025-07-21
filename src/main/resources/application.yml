@@ -38,3 +38,6 @@ logging:
     org.springframework.security.oauth2: DEBUG
     org.springframework.security.oauth2.server.authorization: DEBUG
     org.springframework.jdbc.core: DEBUG
+
+test.service.client.id: test-client
+test.service.client.secret: P@$$w0rd1!
