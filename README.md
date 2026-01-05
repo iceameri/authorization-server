@@ -1,6 +1,6 @@
 # Authorization Server (Spring Authorization Server)
 
-Spring Authorization Server 기반의 OAuth 2.1 / OIDC 토큰 발급 서버다. 
+Spring Authorization Server 기반의 OAuth 2.1 / OIDC 토큰 발급 서버다. \
 Authorization Code, Refresh Token, Client Credentials 그랜트 타입을 지원하며, 
 토큰 무효화(revocation), 토큰 유효성 검사(introspection), JWK 공개 키 제공(jwks) 엔드포인트를 포함한다.
 
@@ -19,7 +19,7 @@ Authorization Code, Refresh Token, Client Credentials 그랜트 타입을 지원
 
 2. Stateful -> Stateless\
 Opaque Token 랜덤 문자열을 검증하려면
-```aiignore
+```
     Client → Resource Server → Authorization Server(introspection)
 ```
 핸덤 문자열이기때문에 사용자정보,권한, 만료시간, 발급 정보 등 아무것도 알수 없다.\
@@ -34,6 +34,9 @@ JWT는 자체 서명이 포함되어있어서 리소스 서버가 토큰 단독 
 > 사업측면에서 매출이 영향에 큰 서버에는 Opaque Token으로 사용해야한다.\
 > 최적화 위해서는 Local Cache -> Global Cache -> DB 순으로 데이터를 조회하면 되지않을까 싶다.
 
+## OIDC 와 Access Token 차이
+OIDC: 로그인 성공 후 프론트앤드, 클라이언트가 사용자 정보 확인, API 호출에 사용하면 안됨
+Access Token: Resource Server 검증 대상
 
 ### 참고사항
 jwt 토큰의 위험성은 토큰이 탈취당하고 만료시간까지 소멸시키는 방법이 불가하다.\
@@ -72,7 +75,7 @@ JWT는 토큰 자체에 상태가 포함되어있기 때문에 운영이 단순�
 - Spring Authorization Server
 - MS SQL (`docker-compose.yml` 참고) (스키마는 `src/main/resources/schema.sql` 참고)
 
-3) 기본 포트 및 콜백
+기본 포트 및 콜백
 - 서버 포트: `http://localhost:9090`
 - 콜백 URL(예시): `http://localhost:9090/auth/callback`
 
