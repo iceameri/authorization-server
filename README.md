@@ -87,11 +87,11 @@ JWT는 토큰 자체에 상태가 포함되어있기 때문에 운영이 단순�
 
 ### 1) 로그인 화면 / 인가 코드 요청 (Authorization Code)
 ```
-GET http://localhost:9090/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://localhost:9090/auth/callback&scope=openid%20profile%20email
+GET http://localhost:9090/oauth2/authorize?response_type=code&client_id=opaque-client&redirect_uri=http://localhost:9090/oauth2/token&scope=email openid
 ```
 또는 cURL:
 ```
-curl -X GET "http://localhost:9090/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://localhost:9090/auth/callback&scope=openid%20profile%20email"
+curl -X GET "http://localhost:9090/oauth2/authorize?response_type=code&client_id=test-client&redirect_uri=http://localhost:9090/oauth2/token&scope=openid%20profile%20email"
 ```
 
 브라우저로 접근하면 로그인 페이지로 리다이렉트되고 인증 성공 시 `redirect_uri`로 `code`가 전달된다.
@@ -102,7 +102,7 @@ curl -X POST http://localhost:9090/oauth2/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=authorization_code" \
   -d "code={AUTH_CODE}" \
-  -d "redirect_uri=http://localhost:9090/auth/callback" \
+  -d "redirect_uri=http://localhost:9090/oauth2/token" \
   -d "user_id={user_id}" \
   -d "password={password}"
 ```
@@ -143,7 +143,7 @@ curl -X POST http://localhost:9090/oauth2/introspect \
   -d token={access_token OR refresh_token}
 ```
 
-## 이전 정리
+## Archive 이전 정리
 * 로그인화면 URL
   `curl -X GET "http://localhost:9090/oauth2/authorize
   ?response_type=code
