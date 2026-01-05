@@ -97,25 +97,33 @@ VALUES ('1',
         'test',
         'client_secret_basic,client_secret_post,client_secret_jwt,private_key_jwt',
         'authorization_code,refresh_token,client_credentials,urn:ietf:params:oauth:grant-type:device_code',
-        'http://localhost:9090/auth/callback,http://localhost:9091/authorized,http://localhost:9090/auth/authorized',
+        'http://localhost:9090/oauth2/authorize,http://localhost:9090/oauth2/token,http://localhost:9090/auth/authorized',
         'openid,profile,email',
-        '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false}',
-        '{"@class": "java.util.Collections$UnmodifiableMap","settings.token.authorization-code-time-to-live": ["java.time.Duration", 300.000000000],"settings.token.access-token-time-to-live": ["java.time.Duration", 1800.000000000],"settings.token.refresh-token-time-to-live": ["java.time.Duration", 86400.000000000],"settings.token.reuse-refresh-tokens": ["java.lang.Boolean", false],"settings.token.device-code-time-to-live": ["java.time.Duration", 300.000000000]}'),
-      (
-        '2',
+        '{"@class":"java.util.Collections$UnmodifiableMap",
+            "settings.client.require-proof-key":false,
+            "settings.client.require-authorization-consent":false
+            }',
+        '{
+            "@class": "java.util.Collections$UnmodifiableMap",
+            "settings.token.authorization-code-time-to-live": ["java.time.Duration", 300.000000000],
+            "settings.token.access-token-time-to-live": ["java.time.Duration", 1800.000000000],
+            "settings.token.refresh-token-time-to-live": ["java.time.Duration", 86400.000000000],
+            "settings.token.reuse-refresh-tokens": ["java.lang.Boolean", false],
+            "settings.token.device-code-time-to-live": ["java.time.Duration", 300.000000000]}'),
+       ('2',
         'opaque-client',
         GETDATE(),
         '{bcrypt}$2a$10$vNyUhWG2.Gd70U4zW9runOVnKaNmY9/DxcAdLweXqHch48eEYdO7i', -- 비번: P@$$w0rd1!
         'opaque-client-service',
         'client_secret_basic,client_secret_post',
         'authorization_code,refresh_token,client_credentials',
-        'http://localhost:9092/callback',
+        'http://localhost:9090/oauth2/authorize,http://localhost:9090/oauth2/token,http://localhost:9090/auth/authorized',
         'openid,profile,email',
         '{"@class":"java.util.Collections$UnmodifiableMap",
           "settings.client.require-proof-key":false,
           "settings.client.require-authorization-consent":false
          }',
-        -- ▼ token_settings: access token 형식 = opaque
+           -- ▼ token_settings: access token 형식 = opaque
         '{
             "@class": "java.util.Collections$UnmodifiableMap",
             "settings.token.authorization-code-time-to-live": ["java.time.Duration", 300.000000000],
@@ -123,15 +131,11 @@ VALUES ('1',
             "settings.token.refresh-token-time-to-live": ["java.time.Duration", 86400.000000000],
             "settings.token.reuse-refresh-tokens": ["java.lang.Boolean", false],
             "settings.token.device-code-time-to-live": ["java.time.Duration", 300.000000000],
-            "settings.token.access-token-format": ["org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat", "opaque"]
-         }'
-        );
+            "settings.token.access-token-format": ["org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat", "reference"]
+         }');
 
 
-USE resource;
-GO;
-
-CREATE TABLE users
+CREATE TABLE user_details
 (
     user_id                 VARCHAR(255)  NOT NULL,                   -- 로그인 ID (예: 이메일, 아이디)
     password                VARCHAR(255)  NOT NULL,                   -- 암호화된 비밀번호
@@ -143,37 +147,77 @@ CREATE TABLE users
     updated_at              DATETIME      NULL,                       -- 수정일시
     email                   NVARCHAR(320) NULL,                       -- 이메일
     phone                   NVARCHAR(50)  NULL,                       -- 전화번호
-    CONSTRAINT [PK_users] PRIMARY KEY CLUSTERED (user_id ASC),
-    CONSTRAINT [UK_users_01] UNIQUE NONCLUSTERED (email ASC, phone ASC)
+    CONSTRAINT [PK_user_details] PRIMARY KEY CLUSTERED (user_id ASC),
+    CONSTRAINT [UK_user_details_01] UNIQUE NONCLUSTERED (email ASC, phone ASC)
 );
 
-INSERT INTO users ( user_id
-                  , password
-                  , enabled
-                  , account_non_expired
-                  , credentials_non_expired
-                  , account_non_locked
-                  , created_at
-                  , updated_at
-                  , email
-                  , phone)
+INSERT INTO user_details ( user_id
+                         , password
+                         , enabled
+                         , account_non_expired
+                         , credentials_non_expired
+                         , account_non_locked
+                         , created_at
+                         , updated_at
+                         , email
+                         , phone)
 VALUES ('admin',
         '{noop}1234qwer!!',
         1,
         1,
         1,
         1,
-        '2025-05-27 16:34:13.2033333',
+        '2025-05-27 16:34:13',
         NULL,
-        'admin@admin.co.kr',
-        '01011112222'),
+        N'admin@admin.co.kr',
+        N'01011112222'),
        ('qwer',
         '{noop}1234',
         1,
         1,
         1,
         1,
-        '2025-05-27 16:39:11.6866667',
+        CONVERT(DATE, '2025-05-27 16:39:11.6866667'),
         NULL,
-        'qwer@qwer.co.kr',
-        '01011112222');
+        N'qwer@qwer.co.kr',
+        N'01011112222');
+
+CREATE TABLE roles
+(
+    role_id     BIGINT IDENTITY (1,1) NOT NULL,
+    role_name   VARCHAR(50)           NOT NULL, -- USER, ADMIN, OPERATOR 등
+    description NVARCHAR(255)         NULL,
+    created_at  DATETIME              NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT PK_roles PRIMARY KEY CLUSTERED (role_id),
+    CONSTRAINT UK_roles_name UNIQUE (role_name)
+);
+INSERT INTO roles (role_name, description)
+VALUES ('USER', N'일반 사용자'),
+       ('ADMIN', N'관리자'),
+       ('OPERATOR', N'운영자');
+
+CREATE TABLE user_roles
+(
+    user_id     VARCHAR(255) NOT NULL,
+    role_id     BIGINT       NOT NULL,
+    assigned_at DATETIME     NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT PK_user_roles PRIMARY KEY CLUSTERED (user_id, role_id),
+);
+INSERT INTO user_roles (user_id, role_id)
+VALUES ('admin@admin.com', 1); -- USER
+
+CREATE TABLE user_identities
+(
+    identity_id BIGINT IDENTITY (1,1) NOT NULL,
+    user_id     VARCHAR(255)          NOT NULL, -- user_details.user_id
+    provider    VARCHAR(50)           NOT NULL, -- google, kakao, github 등
+    provider_id VARCHAR(255)          NOT NULL, -- external sub / id
+    created_at  DATETIME              NOT NULL DEFAULT GETDATE(),
+    CONSTRAINT PK_user_identities PRIMARY KEY CLUSTERED (identity_id),
+    CONSTRAINT UK_user_identities_provider_id UNIQUE (provider, provider_id)
+);
+
+
+USE resource;
+GO;
+

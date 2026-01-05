@@ -3,16 +3,23 @@ package com.jw.authorizationserver.config;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jw.authorizationserver.service.CustomUserDetails;
+import com.jw.authorizationserver.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
@@ -24,6 +31,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat;
 import org.springframework.security.oauth2.server.authorization.token.*;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -32,23 +40,33 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
+@EnableWebSecurity
 @Configuration
 public class AuthorizationServerConfig {
+
+    private final static String PERMIT_ENDPOINT_URL = "/login, /authorized, /error";
 
     /**
      * /oauth2/authorize, /oauth2/token, /oauth2/jwks 엔드포인트 처리
      */
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(
+            HttpSecurity http,
+            OAuth2TokenGenerator<?> tokenGenerator
+    ) throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
 
         http
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 // OAuth2 인증 서버 설정 포함 (authorize, token, etc.)
-                .with(authorizationServerConfigurer, configurer ->
-                        configurer.oidc(Customizer.withDefaults()) // OIDC 1.0 활성화
+                .with(authorizationServerConfigurer, configurer -> {
+                            configurer.tokenGenerator(tokenGenerator);
+                            configurer.oidc(Customizer.withDefaults()); // OIDC 1.0 활성화
+                        }
                 )
                 // 모든 요청 인증 필요
                 .authorizeHttpRequests(authorize -> authorize
@@ -66,6 +84,26 @@ public class AuthorizationServerConfig {
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID")
                 )*/;
+
+        return http.build();
+    }
+
+    /*
+     * 일반사용자
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain defaultSecurityFilterChain(
+            HttpSecurity http,
+            AuthenticationProvider authenticationProvider
+    ) throws Exception {
+        http
+                .authenticationProvider(authenticationProvider)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PERMIT_ENDPOINT_URL).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin(withDefaults());
 
         return http.build();
     }
@@ -90,8 +128,10 @@ public class AuthorizationServerConfig {
      * 리소스 소유자가 클라이언트 에게 부여한 권한을 보유하는 권한 부여
      */
     @Bean
-    public OAuth2AuthorizationConsentService authorizationConsentService(@Qualifier("oauthJdbcTemplate") JdbcTemplate oauthJdbcTemplate,
-                                                                         RegisteredClientRepository clientRepository) {
+    public OAuth2AuthorizationConsentService authorizationConsentService(
+            @Qualifier("oauthJdbcTemplate") JdbcTemplate oauthJdbcTemplate,
+            RegisteredClientRepository clientRepository
+    ) {
         return new JdbcOAuth2AuthorizationConsentService(oauthJdbcTemplate, clientRepository);
     }
 
@@ -159,9 +199,10 @@ public class AuthorizationServerConfig {
         return new JdbcOAuth2AuthorizationService(jdbcTemplate, clientRepository);
     }*/
     @Bean
-    public OAuth2AuthorizationService authorizationService(@Qualifier("oauthJdbcTemplate") JdbcTemplate jdbcTemplate,
-                                                           RegisteredClientRepository registeredClientRepository) {
-
+    public OAuth2AuthorizationService authorizationService(
+            @Qualifier("oauthJdbcTemplate") JdbcTemplate jdbcTemplate,
+            RegisteredClientRepository registeredClientRepository
+    ) {
         JdbcOAuth2AuthorizationService authorizationService =
                 new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
 
@@ -197,6 +238,7 @@ public class AuthorizationServerConfig {
         objectMapper.addMixIn(String.class, SynchronizedSetMixin.class);
         objectMapper.addMixIn(Integer.class, SynchronizedSetMixin.class);
         objectMapper.addMixIn(Long.class, SynchronizedSetMixin.class);
+        objectMapper.addMixIn(OAuth2TokenFormat.class, SynchronizedSetMixin.class);
         objectMapper.addMixIn(CustomUserDetails.class, SynchronizedSetMixin.class);
         objectMapper.addMixIn(Collections.synchronizedSet(new HashSet<>()).getClass(), SynchronizedSetMixin.class);
 
@@ -209,5 +251,26 @@ public class AuthorizationServerConfig {
         );*/
 
         return objectMapper;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(CustomUserDetailsService userDetailsService) {
+        return userDetailsService;
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider(
+            UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder
+    ) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
     }
 }

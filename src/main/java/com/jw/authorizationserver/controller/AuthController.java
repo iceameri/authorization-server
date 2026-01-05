@@ -10,17 +10,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -48,6 +45,8 @@ public class AuthController {
     public ResponseEntity<OAuth2TokenResponse> redirectResourceServer(
             final HttpServletRequest request,
             @RequestHeader final HttpHeaders httpHeaders,
+            @RequestParam(name = OAuth2Constants.CLIENT_ID, required = false) String clientId,
+            @RequestParam(name = OAuth2Constants.CLIENT_SECRET, required = false) String clientSecret,
             @RequestParam(name = OAuth2Constants.CODE) final String code,
             @RequestParam(name = OAuth2Constants.REDIRECT_URI, required = false) final String redirectUri
     ) {
@@ -61,12 +60,12 @@ public class AuthController {
             requestBody.add(OAuth2Constants.REDIRECT_URI, redirectUri.trim());
         }
 
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, this.getHttpHeadersBasicAuthorization(httpHeaders));
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, this.getHttpHeadersBasicAuthorization(httpHeaders, clientId, clientSecret));
 
         return new RestTemplate().postForEntity(this.getTokenEndPointUrl(request), requestEntity, OAuth2TokenResponse.class);
     }
 
-    @GetMapping(value = "/userinfo", produces = MediaType.APPLICATION_JSON_VALUE)
+/*    @GetMapping(value = "/userinfo", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> userInfo(@AuthenticationPrincipal final Jwt jwt) {
         Map<String, Object> response = new HashMap<>();
         response.put("userId", jwt.getSubject());
@@ -79,23 +78,32 @@ public class AuthController {
         response.put("TokenValue", jwt.getTokenValue());
 
         return response;
-    }
+    }*/
 
     @PostMapping(value = "/token/refresh")
-    public ResponseEntity<OAuth2AccessToken> webRefresh(final HttpServletRequest request,
-                                                        @RequestHeader final HttpHeaders httpHeaders,
-                                                        @RequestBody final RefreshTokenRequest refreshTokenRequest) {
+    public ResponseEntity<OAuth2AccessToken> webRefresh(
+            final HttpServletRequest request,
+            @RequestHeader final HttpHeaders httpHeaders,
+            @RequestParam(name = OAuth2Constants.CLIENT_ID, required = false) String clientId,
+            @RequestParam(name = OAuth2Constants.CLIENT_SECRET, required = false) String clientSecret,
+            @RequestBody final RefreshTokenRequest refreshTokenRequest
+    ) {
         MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
         requestBody.add(OAuth2Constants.GRANT_TYPE, OAuth2Constants.REFRESH_TOKEN);
         requestBody.add(AuthorizationGrantType.REFRESH_TOKEN.getValue(), refreshTokenRequest.refreshToken());
 
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, this.getHttpHeadersBasicAuthorization(httpHeaders));
+        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, this.getHttpHeadersBasicAuthorization(httpHeaders, clientId, clientSecret));
         return new RestTemplate().postForEntity(this.getTokenEndPointUrl(request), requestEntity, OAuth2AccessToken.class);
     }
 
-    private HttpHeaders getHttpHeadersBasicAuthorization(final HttpHeaders httpHeaders) {
+    private HttpHeaders getHttpHeadersBasicAuthorization(final HttpHeaders httpHeaders,
+                                                         String clientId,
+                                                         String clientSecret) {
         httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        httpHeaders.setBasicAuth(this.TEST_SERVICE_CLIENT_ID, this.TEST_SERVICE_CLIENT_SECRET);
+        httpHeaders.setBasicAuth(
+                Optional.ofNullable(clientId).orElse(this.TEST_SERVICE_CLIENT_ID),
+                Optional.ofNullable(clientSecret).orElse(this.TEST_SERVICE_CLIENT_SECRET)
+        );
         return httpHeaders;
     }
 

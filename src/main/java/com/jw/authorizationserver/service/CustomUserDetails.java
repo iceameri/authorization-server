@@ -1,34 +1,57 @@
 package com.jw.authorizationserver.service;
 
-import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 
-@Getter
-public class CustomUserDetails extends User {
+public record CustomUserDetails(
+        String username,
+        String password,
+        boolean enabled,
+        boolean accountNonExpired,
+        boolean credentialsNonExpired,
+        boolean accountNonLocked,
+        Collection<? extends GrantedAuthority> authorities,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        String email,
+        String phone
+) implements UserDetails {
 
-    private final LocalDateTime createdAt;
-    private final LocalDateTime updatedAt;
-    private final String email;
-    private final String phone;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
 
-    public CustomUserDetails(final String username,
-                             final String password,
-                             final boolean enabled,
-                             final boolean accountNonExpired,
-                             final boolean credentialsNonExpired,
-                             final boolean accountNonLocked, Collection<? extends GrantedAuthority> authorities,
-                             final LocalDateTime createdAt,
-                             final LocalDateTime updatedAt,
-                             final String email,
-                             final String phone) {
-        super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.email = email;
-        this.phone = phone;
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return accountNonExpired;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return accountNonLocked;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return credentialsNonExpired;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
     }
 }
