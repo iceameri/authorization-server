@@ -1,4 +1,4 @@
-package com.jw.authorizationserver.service;
+package com.jw.authorizationserver.config.userdetails;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

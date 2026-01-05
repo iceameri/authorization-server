@@ -1,4 +1,4 @@
-package com.jw.authorizationserver.service;
+package com.jw.authorizationserver.config.userdetails;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.jw.authorizationserver.service;
+package com.jw.authorizationserver.config.userdetails;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;

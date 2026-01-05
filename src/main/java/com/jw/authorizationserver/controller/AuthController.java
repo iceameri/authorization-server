@@ -65,21 +65,6 @@ public class AuthController {
         return new RestTemplate().postForEntity(this.getTokenEndPointUrl(request), requestEntity, OAuth2TokenResponse.class);
     }
 
-/*    @GetMapping(value = "/userinfo", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> userInfo(@AuthenticationPrincipal final Jwt jwt) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("userId", jwt.getSubject());
-        response.put("scope", jwt.getClaimAsString("scope"));
-        response.put("Claims", jwt.getClaims());
-        response.put("Audience", jwt.getAudience());
-        response.put("Issuer", jwt.getIssuer());
-        response.put("IssuedAt", jwt.getIssuedAt());
-        response.put("expiresAt", jwt.getExpiresAt());
-        response.put("TokenValue", jwt.getTokenValue());
-
-        return response;
-    }*/
-
     @PostMapping(value = "/token/refresh")
     public ResponseEntity<OAuth2AccessToken> webRefresh(
             final HttpServletRequest request,
