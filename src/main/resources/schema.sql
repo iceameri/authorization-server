@@ -1,26 +1,26 @@
 CREATE TABLE oauth2_authorization
 (
-    id                            NVARCHAR(100)  NOT NULL,
-    registered_client_id          NVARCHAR(100)  NOT NULL,
-    principal_name                NVARCHAR(200)  NOT NULL,
-    authorization_grant_type      NVARCHAR(100)  NOT NULL,
-    authorized_scopes             NVARCHAR(1000) NULL,
-    attributes                    NVARCHAR(MAX)  NULL,
-    state                         NVARCHAR(500)  NULL,
+    id                            NVARCHAR(100)  NOT NULL, -- Authorization 식별자
+    registered_client_id          NVARCHAR(100)  NOT NULL, -- 어떤 Client인지
+    principal_name                NVARCHAR(200)  NOT NULL, -- 사용자 ID (sub)
+    authorization_grant_type      NVARCHAR(100)  NOT NULL, -- grant_type (authorization_code 등)
+    authorized_scopes             NVARCHAR(1000) NULL, -- 승인된 scope 목록
+    attributes                    NVARCHAR(MAX)  NULL, -- Authentication 객체 직렬화
+    state                         NVARCHAR(500)  NULL, -- OAuth2 state 값/ Client가 잠깐 쓰고 버리는 값
 
-    authorization_code_value      NVARCHAR(MAX)  NULL,
+    authorization_code_value      NVARCHAR(MAX)  NULL, -- code 값
     authorization_code_issued_at  DATETIME       NULL,
     authorization_code_expires_at DATETIME       NULL,
-    authorization_code_metadata   NVARCHAR(MAX)  NULL,
+    authorization_code_metadata   NVARCHAR(MAX)  NULL, -- PKCE, redirect_uri 등
 
-    access_token_value            NVARCHAR(MAX)  NULL,
+    access_token_value            NVARCHAR(MAX)  NULL, -- JWT 또는 Opaque
     access_token_issued_at        DATETIME       NULL,
     access_token_expires_at       DATETIME       NULL,
     access_token_metadata         NVARCHAR(MAX)  NULL,
     access_token_type             NVARCHAR(100)  NULL,
     access_token_scopes           NVARCHAR(1000) NULL,
 
-    oidc_id_token_value           NVARCHAR(MAX)  NULL,
+    oidc_id_token_value           NVARCHAR(MAX)  NULL, -- ID Token(JWT)
     oidc_id_token_issued_at       DATETIME       NULL,
     oidc_id_token_expires_at      DATETIME       NULL,
     oidc_id_token_metadata        NVARCHAR(MAX)  NULL,
@@ -48,9 +48,6 @@ CREATE INDEX idx_01_registered_client_id
 
 CREATE INDEX idx_02_principal_name
     ON oauth2_authorization (principal_name);
-
-CREATE INDEX idx_03_state
-    ON oauth2_authorization (state);
 
 CREATE TABLE oauth2_authorization_consent
 (
@@ -207,7 +204,8 @@ CREATE TABLE user_roles
 INSERT INTO user_roles (user_id, role_id)
 VALUES ('admin@admin.com', 1); -- USER
 
-CREATE TABLE user_identities
+--TODO 소셜로그인을 위한 테이블
+-- CREATE TABLE user_identities
 (
     identity_id BIGINT IDENTITY (1,1) NOT NULL,
     user_id     VARCHAR(255)          NOT NULL, -- user_details.user_id
