@@ -205,7 +205,7 @@ INSERT INTO user_roles (user_id, role_id)
 VALUES ('admin@admin.com', 1); -- USER
 
 --TODO 소셜로그인을 위한 테이블
--- CREATE TABLE user_identities
+CREATE TABLE user_identities
 (
     identity_id BIGINT IDENTITY (1,1) NOT NULL,
     user_id     VARCHAR(255)          NOT NULL, -- user_details.user_id
