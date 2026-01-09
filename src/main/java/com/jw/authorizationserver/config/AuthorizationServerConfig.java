@@ -49,7 +49,14 @@ public class AuthorizationServerConfig {
     private final static String PERMIT_ENDPOINT_URL = "/login, /authorized, /error";
 
     /**
-     * /oauth2/authorize, /oauth2/token, /oauth2/jwks 엔드포인트 처리
+     * /oauth2/** 요청을 가장 먼저 가로채야 함
+     * Authorization Server가 처리하는 엔드포인트
+     *  /oauth2/authorize
+     *  /oauth2/token
+     *  /oauth2/jwks
+     *  /oauth2/introspect
+     *  /oauth2/revoke
+     *  /.well-known/openid-configuration
      */
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -62,17 +69,17 @@ public class AuthorizationServerConfig {
 
         http
                 .securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-                // OAuth2 인증 서버 설정 포함 (authorize, token, etc.)
+                 /*OAuth2 인증 서버 설정 포함 (authorize, token, etc.)*/
                 .with(authorizationServerConfigurer, configurer -> {
                             configurer.tokenGenerator(tokenGenerator);
                             configurer.oidc(Customizer.withDefaults()); // OIDC 1.0 활성화
                         }
                 )
-                // 모든 요청 인증 필요
+                 /*모든 요청 인증 필요*/
                 .authorizeHttpRequests(authorize -> authorize
                         .anyRequest().authenticated()
                 )
-                // 인증 실패 시 로그인 페이지로 이동
+                 /*인증 실패 시 로그인 페이지로 이동*/
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
                 )
@@ -113,7 +120,7 @@ public class AuthorizationServerConfig {
      * /revoke 무효화 API
      * <br>
      * POST /oauth2/introspect?token={ACCESS_OR_REFRESH_TOKEN} Basic base64({client_id}:{client_secret})
-     * /introspect 토큰 유효성 검사
+     * /introspect 토큰 유효성 검사 (Opaque Token에서 사용)
      * tokenSettings().reuseRefreshTokens(false) 설정되어있어야 RefreshToken 이 재발급
      * <br>
      * grant_type = password 는 기본적으로 Deprecated 되어있고 단순한 사용은 위험이 따르고 2단계 인증과 같은 자격증명 필요(<a href="https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics-19#section-2.4">...</a>)
@@ -168,7 +175,9 @@ public class AuthorizationServerConfig {
         return new JdbcRegisteredClientRepository(jdbcTemplate);
     }*/
     @Bean
-    public RegisteredClientRepository registeredClientRepository(@Qualifier("oauthJdbcTemplate") JdbcTemplate jdbcTemplate) {
+    public RegisteredClientRepository registeredClientRepository(
+            @Qualifier("oauthJdbcTemplate") JdbcTemplate jdbcTemplate
+    ) {
         JdbcRegisteredClientRepository jdbcRegisteredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
 
         ObjectMapper objectMapper = this.securityObjectMapper();
@@ -190,8 +199,7 @@ public class AuthorizationServerConfig {
 
 
     /**
-     * 새로운 권한이 저장되고 기존 권한이 쿼리
-     * OidcScopes.OPENID
+     * Mapper 적용하지 않으면 오브젝트가 반영되지 않는 현상 발생
      */
     /*@Bean
     public OAuth2AuthorizationService authorizationService(@Qualifier("oauthJdbcTemplate") JdbcTemplate jdbcTemplate,

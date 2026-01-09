@@ -13,6 +13,7 @@ import javax.sql.DataSource;
 
 @Configuration
 public class DataSourceConfig {
+
     @Primary
     @Bean(name = "oauthDataSource")
     @ConfigurationProperties(prefix = "spring.datasource")
